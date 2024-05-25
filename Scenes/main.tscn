@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://cqh2qhu71nccr"]
+
+[ext_resource type="Script" path="res://Scripts/main.gd" id="1_drebt"]
+[ext_resource type="PackedScene" uid="uid://bnydhinpkcbx5" path="res://Scenes/player.tscn" id="1_w3qr0"]
+
+[node name="main" type="Node3D"]
+script = ExtResource("1_drebt")
+
+[node name="world" type="Node3D" parent="."]
+
+[node name="player" parent="world" instance=ExtResource("1_w3qr0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="world"]
+size = Vector3(9.56519, 0.001, 10.643)
