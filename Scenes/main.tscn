@@ -12,4 +12,5 @@ script = ExtResource("1_drebt")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="world"]
+use_collision = true
 size = Vector3(9.56519, 0.001, 10.643)
