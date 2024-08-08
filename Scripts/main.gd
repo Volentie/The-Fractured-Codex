@@ -1,17 +1,17 @@
 # Core script, initialize game pendencies
 extends Node3D
 
-var Phaux = {
-	"name": "Phaux",
-	"version": 0.1,
-	"pretty": ":= PHAUX =:\t"
-}
-
-func debug(array_msg: Array[String]):
-	print(Phaux.pretty, "\t".join(array_msg))
+const root = &"res://Scripts/"
+static var nodes = {}
 
 # --== INIT ==--
-func load_files_from_dir(dir: String):
+func attach_child(ref: RefCounted, file: String) -> void:
+	var instance = ref.new()
+	Phaux.debug( ["Attaching node instance:", file] )
+	add_child(instance)
+	nodes[file] = instance
+
+func load_files_from_dir(dir: String) -> void:
 	var path = DirAccess.open(dir)
 	if path:
 		path.list_dir_begin()
@@ -20,19 +20,21 @@ func load_files_from_dir(dir: String):
 		while file != "":
 			dir = path.get_current_dir() + "/" + file
 			if path.current_is_dir():
-				debug( ["Crawling dir:", dir] )
+				Phaux.debug( ["Crawling dir:", dir] )
 				load_files_from_dir(dir)
 			else:
-				debug( ["Loading file:", file] )
-				var file_node = load(dir)
-				var node = file_node.new()
-				add_child(node)
-				debug( ["Finished loading file:", file] )
+				Phaux.debug( ["Loading file: ", file, "..."], false )
+				var file_node = ResourceLoader.load(dir)
+				if file_node == null:
+					Phaux.error("Failed to load file: " + file, path.get_line())
+				else:
+					attach_child(file_node, file)
+				Phaux.debug( ["Finished loading file:", file] )
 			file = path.get_next()
 
 func _ready():
-	debug( ["--- BOOTING ---"])
-	debug( ["Phaux Engine v"+str(Phaux.version)] )
-	debug( ["--- LOADING CLASSES/CORE ---"])
-	load_files_from_dir("res://Scripts/Classes/Core")
-	debug( ["--- FINISHED BOOTING ---"])
+	Phaux.debug( ["--- BOOTING ---"] )
+	Phaux.debug( ["Phaux Engine v"+str(Phaux.version)] )
+	Phaux.debug( ["--- LOADING CLASSES/CORE ---"] )
+	load_files_from_dir( root + "Classes/Core" )
+	Phaux.debug( ["--- FINISHED BOOTING ---"] )
