@@ -71,9 +71,8 @@ func update_transform(input_method: StringName, action: StringName) -> String:
 			callO.call(config.walk_power)
 			return "walk"
 	else:
-		Phaux.error("Invalid action: " + action)
+		Plog.error("Invalid action: " + action)
 	return "Error"
-
 
 func _process(_delta):
 	var movement_type

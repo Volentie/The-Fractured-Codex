@@ -16,7 +16,9 @@ config/features=PackedStringArray("4.2", "Forward Plus")
 
 [autoload]
 
-Phaux="*res://Scripts/Util/phaux.gd"
+Pmath="*res://Scripts/Util/pmath.gd"
+Plog="*res://Scripts/Util/plog.gd"
+Pfile="*res://Scripts/Util/pfile.gd"
 
 [dotnet]
 

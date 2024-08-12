@@ -7,7 +7,7 @@ static var nodes = {}
 # --== INIT ==--
 func attach_child(ref: RefCounted, file: String) -> void:
 	var instance = ref.new()
-	Phaux.debug( ["Attaching node instance:", file] )
+	Plog.debug( ["Attaching node instance:", file] )
 	add_child(instance)
 	nodes[file] = instance
 
@@ -20,21 +20,21 @@ func load_files_from_dir(dir: String) -> void:
 		while file != "":
 			dir = path.get_current_dir() + "/" + file
 			if path.current_is_dir():
-				Phaux.debug( ["Crawling dir:", dir] )
+				Plog.debug( ["Crawling dir:", dir] )
 				load_files_from_dir(dir)
 			else:
-				Phaux.debug( ["Loading file: ", file, "..."], false )
+				Plog.debug( ["Loading file: ", file, "..."], false )
 				var file_node = ResourceLoader.load(dir)
 				if file_node == null:
-					Phaux.error("Failed to load file: " + file, path.get_line())
+					Plog.error("Failed to load file: " + file, path.get_line())
 				else:
 					attach_child(file_node, file)
-				Phaux.debug( ["Finished loading file:", file] )
+				Plog.debug( ["Finished loading file:", file] )
 			file = path.get_next()
 
 func _ready():
-	Phaux.debug( ["--- BOOTING ---"] )
-	Phaux.debug( ["Phaux Engine v"+str(Phaux.version)] )
-	Phaux.debug( ["--- LOADING CLASSES/CORE ---"] )
+	Plog.debug( ["--- BOOTING ---"] )
+	Plog.debug( ["Phaux Engine v"+str(Plog.version)] )
+	Plog.debug( ["--- LOADING CLASSES/CORE ---"] )
 	load_files_from_dir( root + "Classes/Core" )
-	Phaux.debug( ["--- FINISHED BOOTING ---"] )
+	Plog.debug( ["--- FINISHED BOOTING ---"] )
