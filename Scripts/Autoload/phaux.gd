@@ -19,3 +19,10 @@ func debug(array_msg, insert_space: bool=true) -> bool:
 		array_msg = "\t" + space.join(array_msg)
 	print(self.pretty, array_msg)
 	return true
+
+func get_util(script_name: String) -> Object:
+	var script = ResourceLoader.load("res://Scripts/Util/" + script_name + ".gd")
+	if script == null:
+		error("Failed to load script: " + script_name)
+		return null
+	return script.instantiate()

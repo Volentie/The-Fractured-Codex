@@ -16,9 +16,9 @@ config/features=PackedStringArray("4.2", "Forward Plus")
 
 [autoload]
 
-Pmath="*res://Scripts/Util/pmath.gd"
-Plog="*res://Scripts/Util/plog.gd"
-Pfile="*res://Scripts/Util/pfile.gd"
+Phaux="*res://Scripts/Autoload/phaux.gd"
+CustomInputs="*res://Scripts/Autoload/custom_inputs.gd"
+Physics="*res://Scripts/Autoload/physics.gd"
 
 [dotnet]
 

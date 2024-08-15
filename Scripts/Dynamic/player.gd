@@ -1,15 +1,5 @@
 class_name Player extends CharacterBody3D
 
-const config = {
-	"gravity": 0.5,
-	"walk_power": 1.1,
-	"jump_power": 10,
-}
-
-var translation: Dictionary = {
-	"velocity": Vector3(),
-	"rotation": Vector3()
-}
 
 const VU3 = {
 	"x": Vector3(1, 0, 0),
@@ -25,6 +15,12 @@ const map = [
 	"go_right",
 	"go_up"
 ]
+
+# Physics has to be loaded for us to get translation from it
+var config = Physics.config
+var world_config = config["world"]
+var player_config = config["player"]
+var translation = Physics.translation
 
 func go_forward(_scale: float = 1) -> void:
 	translation["velocity"] -= VU3.z * _scale
@@ -55,23 +51,23 @@ func move_and_clear() -> void:
 	clear_velocity()
 
 func apply_gravity() -> void:
-	translation["velocity"] -= VU3.y * config.gravity
+	translation["velocity"] -= VU3.y * world_config.gravity
 	move_and_clear()
 
 func update_transform(input_method: StringName, action: StringName) -> String:
-	assert(input_method in custom_inputs.input_methods and action in map, "Invalid input_method or action")
+	assert(input_method in CustomInputs.input_methods and action in map, "Invalid input_method or action")
 
 	var callO = Callable(self, action)
 	if callO.is_valid():
 		if action == "go_up":
 			if is_on_floor():
-				callO.call(config.jump_power)
+				callO.call(player_config.accel.jump)
 				return "jump"
 		else:
-			callO.call(config.walk_power)
+			callO.call(player_config.accel.walk)
 			return "walk"
 	else:
-		Plog.error("Invalid action: " + action)
+		Phaux.error("Invalid action: " + action)
 	return "Error"
 
 func _process(_delta):

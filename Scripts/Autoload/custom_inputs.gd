@@ -1,4 +1,4 @@
-class_name custom_inputs extends Node3D
+extends Node3D
 
 signal handler(input_method: StringName, input_mapped: StringName)
 
