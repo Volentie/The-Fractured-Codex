@@ -12,8 +12,14 @@ const config = {
 	"player": {
 		"mass": 1,
 		"accel": {
-			"walk": 1.1,
+			"walk": 0.4,
 			"jump": 10,
+		}
+	},
+	"constraints": {
+		"velocity": {
+			"max": 100,
+			"min": -100,
 		}
 	}
 }
@@ -57,3 +63,13 @@ func apply_normal(normal: Vector3) -> void:
 func apply_velocity() -> void:
 	translation["velocity"] += translation["accel"]
 	translation["velocity_unit"] = translation["velocity"].normalized()
+
+# This doesn't work as intended, I need to get back to it some other time
+# func get_velocity() -> bool:
+# 	var cur_script = get_script()
+# 	var obj = cur_script.get("velocity")
+# 	if "velocity" in cur_script:
+# 		print(true)
+# 		return true
+# 	print(false, obj)
+# 	return false

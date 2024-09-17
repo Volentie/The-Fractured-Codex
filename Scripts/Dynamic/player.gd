@@ -1,6 +1,5 @@
 class_name Player extends CharacterBody3D
 
-
 const VU3 = {
 	"x": Vector3(1, 0, 0),
 	"y": Vector3(0, 1, 0),
@@ -20,70 +19,105 @@ const map = [
 var config = Physics.config
 var world_config = config["world"]
 var player_config = config["player"]
+var constraints_config = config["constraints"]
 var translation = Physics.translation
+var min_vel = constraints_config.velocity["min"]
+var max_vel = constraints_config.velocity["max"]
+var min_vel_v = Vector3(min_vel, min_vel, min_vel)
+var max_vel_v = Vector3(max_vel, max_vel, max_vel)
+var _scale = player_config.accel["walk"]
+const desaccelerate_factor = 0.2
+@onready var camera = $player_camera
 
-func go_forward(_scale: float = 1) -> void:
-	translation["velocity"] -= VU3.z * _scale
+var last_mouse_pos: Vector2
 
-func go_backward(_scale: float = 1) -> void:
-	translation["velocity"] += VU3.z * _scale
+func accelerate(axis: String, dir) -> void:
+	assert(axis and _scale and dir, "Invalid parameters")
+	if dir == "pos":
+		dir = 1
+	else:
+		dir = -1
+	translation["accel"] = (VU3[axis] * _scale) * dir
+	translation["velocity"] += translation["accel"]
 
-func go_left(_scale: float = 1) -> void:
-	translation["velocity"] -= VU3.x * _scale
+func go_forward() -> void:
+	accelerate("z", "neg")
 
-func go_right(_scale: float = 1) -> void:
-	translation["velocity"] += VU3.x * _scale
+func go_backward() -> void:
+	accelerate("z", "pos")
+
+func go_left() -> void:
+	accelerate("x", "neg")
+
+func go_right() -> void:
+	accelerate("x", "pos")
 	
-func go_up(_scale: float = 1) -> void:
-	translation["velocity"] += VU3.y * _scale
+func go_up() -> void:
+	accelerate("y", "pos")
+
+func clear_accel():
+	translation["accel"] = VU3.c
 
 func clear_velocity():
 	translation["velocity"] = VU3.c
-	velocity = VU3.c
-
-func apply_transform(move: bool) -> void:
-	velocity = translation["velocity"]
-	if move:
-		move_and_slide()
-
-func move_and_clear() -> void:
-	apply_transform(true)
-	clear_velocity()
 
 func apply_gravity() -> void:
-	translation["velocity"] -= VU3.y * world_config.gravity
-	move_and_clear()
+	translation["accel"] -= VU3.y * world_config.gravity
 
-func update_transform(input_method: StringName, action: StringName) -> String:
-	assert(input_method in CustomInputs.input_methods and action in map, "Invalid input_method or action")
+func update_values(constraint: bool) -> void:
+	velocity = translation["velocity"]
+	if constraint:
+		velocity = velocity.clamp(min_vel_v, max_vel_v)
 
-	var callO = Callable(self, action)
-	if callO.is_valid():
-		if action == "go_up":
-			if is_on_floor():
-				callO.call(player_config.accel.jump)
-				return "jump"
-		else:
-			callO.call(player_config.accel.walk)
-			return "walk"
-	else:
-		Phaux.error("Invalid action: " + action)
-	return "Error"
-
-func _process(_delta):
-	var movement_type
+func breathe():
 	# Apply gravity if not grounded
 	if !is_on_floor():
 		apply_gravity()
+	# Update values	
+	update_values(true)
+	# Desaccelerate so we don't keep moving forever
+	desaccelerate()
+	# Move
+	move_and_slide()
+	# Camera translation
+	camera_translation()
 
+func camera_translation():
+	var viewport = get_viewport()
+	var mouse_pos = viewport.get_mouse_position()
+	var center = Vector2(viewport.size.x / 2, viewport.size.y / 2)
+	var delta = mouse_pos - center
+	var sensitivity = 0.1
+	var camera_rotation = camera.rotation_degrees
+	camera_rotation.x -= delta.y * sensitivity
+	camera_rotation.x = clamp(camera_rotation.x, -90, 90)
+	camera_rotation.y -= delta.x * sensitivity
+	camera.rotation_degrees = camera_rotation
+	# Reset cursor to center
+	viewport.warp_mouse(center)
+
+
+func desaccelerate():
+	# Desaccelerate and round to 0 if close enough
+	if translation["velocity"].length() < 0.1:
+		translation["velocity"] = VU3.c
+	else:
+		translation["velocity"] = translation["velocity"].lerp(VU3.c, desaccelerate_factor)
+	
+
+func update_transform(input_method: StringName, action: StringName) -> void:
+	assert(input_method in CustomInputs.input_methods and action in map, "Invalid input_method or action")
+	var callO = Callable(self, action)
+	if callO.is_valid():
+		callO.call()
+	else:
+		Phaux.error("Invalid action: " + action)
+
+func _process(_delta):
 	# Check for input
 	for custom_action in map:
 		if Input.is_action_pressed(custom_action):
-			movement_type = update_transform(&"holding", custom_action)
-	
-	# Check if velocity has changed to move
-	if translation["velocity"] != Vector3.ZERO:
-		if movement_type == "walk":
-			move_and_clear()
-		elif movement_type == "jump":
-			apply_transform(true)
+			update_transform(&"holding", custom_action)
+
+	# Update values	
+	breathe()
