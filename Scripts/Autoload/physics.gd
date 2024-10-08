@@ -7,7 +7,7 @@ extends Node3D
 
 const config = {
 	"world": {
-		"gravity": 0.5,
+		"gravity": 0.8,
 	},
 	"player": {
 		"mass": 1,
@@ -20,7 +20,8 @@ const config = {
 		"velocity": {
 			"max": 100,
 			"min": -100,
-		}
+		},
+        "desaccelerate_factor": 0.2
 	}
 }
 

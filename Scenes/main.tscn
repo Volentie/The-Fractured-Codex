@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://cqh2qhu71nccr"]
+[gd_scene load_steps=3 format=3 uid="uid://cqh2qhu71nccr"]
 
 [ext_resource type="PackedScene" uid="uid://bnydhinpkcbx5" path="res://Scenes/player.tscn" id="1_w3qr0"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mqkdf"]
+albedo_color = Color(0.1156, 0.102, 0.51, 1)
 
 [node name="main" type="Node3D"]
 
@@ -12,3 +15,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 [node name="CSGBox3D" type="CSGBox3D" parent="world"]
 use_collision = true
 size = Vector3(9.56519, 0.001, 10.643)
+material = SubResource("StandardMaterial3D_mqkdf")

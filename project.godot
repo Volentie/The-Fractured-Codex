@@ -16,9 +16,10 @@ config/features=PackedStringArray("4.3", "Forward Plus")
 
 [autoload]
 
+WindowManagement="*res://Scripts/Autoload/window_management.gd"
+Physics="*res://Scripts/Autoload/physics.gd"
 Phaux="*res://Scripts/Autoload/phaux.gd"
 CustomInputs="*res://Scripts/Autoload/custom_inputs.gd"
-Physics="*res://Scripts/Autoload/physics.gd"
 
 [dotnet]
 
