@@ -12,8 +12,9 @@ const config = {
 	"player": {
 		"mass": 1,
 		"accel": {
-			"walk": 0.4,
-			"jump": 10,
+			"walk": Vector3(0.4, 1, 0.4),
+			"run": Vector3(0.8, 1, 0.8),
+			"jump": Vector3(1, 10, 1),
 		}
 	},
 	"constraints": {
@@ -21,7 +22,8 @@ const config = {
 			"max": 100,
 			"min": -100,
 		},
-        "desaccelerate_factor": 0.2
+        "desaccelerate_factor": 0.9,
+		"desaccelerate_round": 0.2,
 	}
 }
 
@@ -32,11 +34,9 @@ var translation = {
 	"friction": Vector3(0, 0, 0),
 	"normal": Vector3(0, 0, 0),
 	"net_force": Vector3(0, 0, 0),
-	"accel_unit": Vector3(0, 0, 0),
 	"velocity_unit": Vector3(0, 0, 0),
 	"friction_unit": Vector3(0, 0, 0),
 	"normal_unit": Vector3(0, 0, 0),
-	"net_force_unit": Vector3(0, 0, 0),
 }
 
 func net_force() -> void:
