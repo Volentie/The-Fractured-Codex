@@ -1,7 +1,11 @@
-[gd_scene load_steps=3 format=3 uid="uid://cqh2qhu71nccr"]
+[gd_scene load_steps=5 format=3 uid="uid://cqh2qhu71nccr"]
 
 [ext_resource type="PackedScene" uid="uid://bnydhinpkcbx5" path="res://Scenes/player.tscn" id="1_w3qr0"]
 [ext_resource type="PackedScene" uid="uid://df82w1xv7dllg" path="res://Scenes/block_of_woodplanks_1.tscn" id="2_qf3jf"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_mnlrr"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_itnfl"]
 
 [node name="main" type="Node3D"]
 
@@ -11,3 +15,12 @@
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
 [node name="block_of_woodplanks1" parent="world" instance=ExtResource("2_qf3jf")]
+
+[node name="RigidBody3D" type="RigidBody3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.27604, 2.92392, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="world/RigidBody3D"]
+mesh = SubResource("BoxMesh_mnlrr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/RigidBody3D"]
+shape = SubResource("BoxShape3D_itnfl")

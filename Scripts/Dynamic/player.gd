@@ -14,10 +14,11 @@ const input_map = [
 @onready var head = $player_camera
 
 # Constants
-const run_speed: float = 10.0
-const walk_speed: float = 5.0
-const jump_scale: float = 5.0
+const run_speed: float = 5.0
+const walk_speed: float = 3.0
+const jump_scale: float = 2.5
 const gravity_scale: float = 9.8
+const acceleration: float = 10.0
 
 # Variables
 var speed: float = walk_speed
@@ -49,6 +50,7 @@ func _ready() -> void:
 func handle_rotation() -> void:
 	head.rotation_degrees.x -= mouse_input.y * mouse_sensitivity
 	rotation_degrees.y -= mouse_input.x * mouse_sensitivity
+	# Clamp x camera rotation
 	head.rotation_degrees.x = clamp(head.rotation_degrees.x, -90, 90)
 	mouse_input = Vector2.ZERO
 
@@ -58,6 +60,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	handle_rotation()
+	move_and_slide()
 
 	# Movement
 	var direction = Vector3.ZERO
@@ -69,26 +72,24 @@ func _physics_process(delta: float) -> void:
 		direction -= basis.x
 	if Input.is_action_pressed("move_right"):
 		direction += basis.x
-	
+
 	# Alter speed
 	if Input.is_action_just_pressed("speedmode_run"):
 		speed_mode.switch("Run")
 	if Input.is_action_just_released("speedmode_run"):
 		speed_mode.switch("Walk")
-	
-	# Move
-	var force = direction.normalized() * speed
-	velocity = Vector3(force.x, velocity.y, force.z)
-	
-	# Jump
-	if is_on_floor() and Input.is_action_just_pressed("action_jump"):
-		velocity.y = jump_scale
-	
-	# Apply gravity
-	velocity.y -= gravity_scale * delta
+		
+	# Apply gravity and limit speed
+	if !is_on_floor():
+		velocity.y -= gravity_scale * delta
 
 	# Move
-	move_and_slide()
+	var force = direction.normalized() * speed
+	velocity = lerp(velocity, Vector3(force.x, velocity.y, force.z), acceleration * delta)
+
+	# Jump
+	if is_on_floor() and Input.is_action_just_pressed("action_jump"):
+		velocity.y += (jump_scale * 100) * delta
 	
 	# Handle energy state
 	if velocity.length() > 0:
