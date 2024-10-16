@@ -1,14 +1,7 @@
-class_name Player extends CharacterBody3D
+extends CharacterBody3D
 
-# Configuration and bindings
-const VU3 = {
-	"x": Vector3(1, 0, 0),
-	"y": Vector3(0, 1, 0),
-	"z": Vector3(0, 0, 1),
-	"c": Vector3(0, 0, 0)
-}
-
-const map = [
+# Input Map
+const input_map = [
 	"move_forward",
 	"move_backward",
 	"move_left",
@@ -17,126 +10,88 @@ const map = [
 	"speedmode_run"
 ]
 
-var config = Physics.config
-var world_config = config["world"]
-var player_config = config["player"]
-var player_accel = player_config.accel
-var player_walk_accel = player_accel["walk"]
-var player_jump_accel = player_accel["jump"]
-var player_run_accel = player_accel["run"]
-var constraints_config = config["constraints"]
-var translation = Physics.translation
-var min_vel = constraints_config.velocity["min"]
-var max_vel = constraints_config.velocity["max"]
-var min_vel_v = Vector3(min_vel, min_vel, min_vel)
-var max_vel_v = Vector3(max_vel, max_vel, max_vel)
-var ply_state = PlayerState
-var input_list: Array = []
+# References
+@onready var head = $player_camera
 
-# Physics
-var player_mass = player_config.mass
-
-# Node references
-@onready var camera = $player_camera
+# Constants
+const run_speed: float = 10.0
+const walk_speed: float = 5.0
+const jump_scale: float = 5.0
+const gravity_scale: float = 9.8
 
 # Variables
-var last_mouse_pos: Vector2
-static var acceleration_scale: Vector3
-static var cur_delta: float
+var speed: float = walk_speed
+var mouse_input: Vector2 = Vector2.ZERO
+var mouse_sensitivity: float = 0.1
+
+# State
+var energy = StateMachine.new("Energy", {
+	"Potential": State.new("Potential"),
+	"Kinetic": State.new("Kinetic")
+})
+var speed_mode = StateMachine.new("SpeedMode", {
+	"Run": State.new("Run", func(): change_speed(run_speed)),
+	"Walk": State.new("Walk", func(): change_speed(walk_speed)),
+})
 
 # Methods
-static func set_acceleration_scale(_scale: Vector3) -> void:
-	acceleration_scale = _scale
+func change_speed(_speed: float) -> void:
+	speed = _speed
 
-func get_camera_relative_axis(axis: String) -> Vector3:
-	var cam_basis = camera.global_transform.basis
-	if axis == "x":
-		return cam_basis.x
-	elif axis == "y":
-		return cam_basis.y
-	elif axis == "z":
-		return cam_basis.z
-	else:
-		Phaux.error("Invalid axis: " + axis)
-		return VU3.c
+func _ready() -> void:
+	# Set the initial state
+	energy.switch("Potential")
+	speed_mode.switch("Walk")
 
-func get_normalized_camera_relative_axis(axis: String) -> Vector3:
-	var basis_vec: Vector3 = get_camera_relative_axis(axis)
-	basis_vec.y = 0
-	return basis_vec.normalized()
+	# Mouse mode
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
-func hold_speedmode_run() -> void:
-	ply_state.speed_mode.switch("Run")
+func handle_rotation() -> void:
+	head.rotation_degrees.x -= mouse_input.y * mouse_sensitivity
+	rotation_degrees.y -= mouse_input.x * mouse_sensitivity
+	head.rotation_degrees.x = clamp(head.rotation_degrees.x, -90, 90)
+	mouse_input = Vector2.ZERO
 
-func release_speedmode_run() -> void:
-	ply_state.speed_mode.switch("Walk")
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		mouse_input += event.relative
 
-func hold_move_forward() -> void:
-	Physics.accelerate(-get_normalized_camera_relative_axis("z"))
+func _physics_process(delta: float) -> void:
+	handle_rotation()
 
-func hold_move_backward() -> void:
-	Physics.accelerate(get_normalized_camera_relative_axis("z"))
-
-func hold_move_left() -> void:
-	Physics.accelerate(-get_normalized_camera_relative_axis("x"))
-
-func hold_move_right() -> void:
-	Physics.accelerate(get_normalized_camera_relative_axis("x"))
+	# Movement
+	var direction = Vector3.ZERO
+	if Input.is_action_pressed("move_forward"):
+		direction -= basis.z
+	if Input.is_action_pressed("move_backward"):
+		direction += basis.z
+	if Input.is_action_pressed("move_left"):
+		direction -= basis.x
+	if Input.is_action_pressed("move_right"):
+		direction += basis.x
 	
-func hold_action_jump() -> void:
-	if is_on_floor():
-		self.velocity += player_jump_accel * cur_delta
+	# Alter speed
+	if Input.is_action_just_pressed("speedmode_run"):
+		speed_mode.switch("Run")
+	if Input.is_action_just_released("speedmode_run"):
+		speed_mode.switch("Walk")
+	
+	# Move
+	var force = direction.normalized() * speed
+	velocity = Vector3(force.x, velocity.y, force.z)
+	
+	# Jump
+	if is_on_floor() and Input.is_action_just_pressed("action_jump"):
+		velocity.y = jump_scale
+	
+	# Apply gravity
+	velocity.y -= gravity_scale * delta
 
-func get_mouse_pos() -> Vector2:
-	var viewport = get_viewport()
-	return viewport.get_mouse_position()
-
-func camera_translation():
-	var viewport = get_viewport()
-	var mouse_pos = get_mouse_pos()
-	var center = Vector2(viewport.size.x / 2, viewport.size.y / 2)
-	var delta = mouse_pos - center
-	var sensitivity = 0.1
-	var camera_rotation = camera.rotation_degrees
-	camera_rotation.x -= delta.y * sensitivity
-	camera_rotation.x = clamp(camera_rotation.x, -90, 90)
-	camera_rotation.y -= delta.x * sensitivity
-	camera.rotation_degrees = camera_rotation
-	# Reset cursor to center
-	viewport.warp_mouse(center)
-
-func update_input_list(input_method: StringName, action: StringName) -> void:
-	if input_method == &"hold":
-		input_list.append(action)
-	elif input_method == &"release":
-		input_list.erase(action)
-	update_motion_state()
-
-func update_transform(input_method: StringName, action: StringName) -> void:
-	var callO = Callable(self, input_method + "_" + action)
-	if callO.is_valid():
-		if action.begins_with("move"):
-			update_input_list(input_method, action)
-		callO.call()
-
-func update_motion_state() -> void:
-	if input_list.size() == 0:
-		ply_state.move.switch("Still")
+	# Move
+	move_and_slide()
+	
+	# Handle energy state
+	if velocity.length() > 0:
+		energy.switch("Kinetic")
 	else:
-		ply_state.move.switch("Motion")
-
-func _physics_process(delta: float):
-	# Update delta var
-	cur_delta = delta
-	if not WindowManagement.window_has_focus:
-		return
-
-	# Check for input
-	for custom_action in map:
-		if Input.is_action_pressed(custom_action):
-			update_transform(&"hold", custom_action)
-		if Input.is_action_just_released(custom_action):
-			update_transform(&"release", custom_action)
-
-	camera_translation()
-	Physics.apply_physics(self)
+		energy.switch("Potential")

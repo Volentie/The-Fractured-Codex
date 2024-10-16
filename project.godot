@@ -14,13 +14,6 @@ config/name="The Fractured Codex"
 run/main_scene="res://Scenes/main.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 
-[autoload]
-
-WindowManagement="*res://Scripts/Autoload/window_management.gd"
-Physics="*res://Scripts/Autoload/physics.gd"
-Phaux="*res://Scripts/Autoload/phaux.gd"
-PlayerState="*res://Scripts/Autoload/player_state.gd"
-
 [dotnet]
 
 project/assembly_name="Julia Needs a Hand"
