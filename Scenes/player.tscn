@@ -12,3 +12,7 @@ shape = SubResource("CapsuleShape3D_iclx3")
 
 [node name="player_camera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="walk_stream" type="AudioStreamPlayer3D" parent="."]
+
+[node name="jump_stream" type="AudioStreamPlayer3D" parent="."]

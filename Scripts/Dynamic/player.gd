@@ -12,6 +12,8 @@ const input_map = [
 
 # References
 @onready var head = $player_camera
+@onready var walk_stream = $walk_stream
+@onready var jump_stream = $jump_stream
 
 # Constants
 const run_speed: float = 5.0
@@ -23,11 +25,14 @@ const gravity_scale: float = 9.8
 var speed: float = walk_speed
 var mouse_input: Vector2 = Vector2.ZERO
 var mouse_sensitivity: float = 0.1
+var jump_clk: bool = false
 
 # State
-var energy = StateMachine.new("Energy", {
-	"Potential": State.new("Potential"),
-	"Kinetic": State.new("Kinetic")
+var mode = StateMachine.new("Mode", {
+	"Walking": State.new("Walking"),
+	"Running": State.new("Running"),
+	"Idle": State.new("Idle"),
+	"Air": State.new("Air")
 })
 var speed_mode = StateMachine.new("SpeedMode", {
 	"Run": State.new("Run", func(): change_speed(run_speed)),
@@ -40,7 +45,7 @@ func change_speed(_speed: float) -> void:
 
 func _ready() -> void:
 	# Set the initial state
-	energy.switch("Potential")
+	mode.switch("Idle")
 	speed_mode.switch("Walk")
 
 	# Mouse mode
@@ -86,22 +91,33 @@ func _physics_process(delta: float) -> void:
 		# Handle ground movement
 		# If the player is moving, lerp faster to the new velocity
 		if direction.length() > 0:
+			# Handle walking/running state
+			if speed_mode.get_cur_state_name() == "Run":
+				mode.switch("Running")
+			else:
+				mode.switch("Walking")
 			velocity = lerp(velocity, force, 0.9)
 		# If not, lerp slower to 0
 		else:
+			# Switch to idle state
+			mode.switch("Idle")
 			velocity = lerp(velocity, force, 0.2)
 
 		# Jump
 		if Input.is_action_just_pressed("action_jump"):
 			velocity.y += (jump_scale * 150) * delta
+			jump_clk = !jump_clk
 	else:
+		# Switch to air mode
+		mode.switch("Air")
 		# Handle air movement (more like gliding)
 		velocity = lerp(velocity, force, 0.1)
 		# Apply gravity
 		velocity.y -= (gravity_scale * 2.5) * delta
-					
-	# Handle energy state
-	if velocity.length() > 0:
-		energy.switch("Kinetic")
-	else:
-		energy.switch("Potential")
+
+# Handle sounds
+func _process(_delta: float) -> void:
+	PlayerSound.handle_sounds(self, {
+		"walk_stream": walk_stream,
+		"jump_stream": jump_stream
+	})
