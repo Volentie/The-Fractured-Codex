@@ -18,7 +18,6 @@ const run_speed: float = 5.0
 const walk_speed: float = 3.0
 const jump_scale: float = 2.5
 const gravity_scale: float = 9.8
-const acceleration: float = 10.0
 
 # Variables
 var speed: float = walk_speed
@@ -78,19 +77,29 @@ func _physics_process(delta: float) -> void:
 		speed_mode.switch("Run")
 	if Input.is_action_just_released("speedmode_run"):
 		speed_mode.switch("Walk")
-		
-	# Apply gravity and limit speed
-	if !is_on_floor():
-		velocity.y -= gravity_scale * delta
 
-	# Move
-	var force = direction.normalized() * speed
-	velocity = lerp(velocity, Vector3(force.x, velocity.y, force.z), acceleration * delta)
+	var dir_force: Vector3 = direction * speed
+	var force = Vector3(dir_force.x, velocity.y, dir_force.z)
 
-	# Jump
-	if is_on_floor() and Input.is_action_just_pressed("action_jump"):
-		velocity.y += (jump_scale * 100) * delta
-	
+	# Ground logic
+	if is_on_floor():
+		# Handle ground movement
+		# If the player is moving, lerp faster to the new velocity
+		if direction.length() > 0:
+			velocity = lerp(velocity, force, 0.9)
+		# If not, lerp slower to 0
+		else:
+			velocity = lerp(velocity, force, 0.2)
+
+		# Jump
+		if Input.is_action_just_pressed("action_jump"):
+			velocity.y += (jump_scale * 150) * delta
+	else:
+		# Handle air movement (more like gliding)
+		velocity = lerp(velocity, force, 0.1)
+		# Apply gravity
+		velocity.y -= (gravity_scale * 2.5) * delta
+					
 	# Handle energy state
 	if velocity.length() > 0:
 		energy.switch("Kinetic")

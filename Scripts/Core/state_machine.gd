@@ -16,4 +16,6 @@ func switch(state_name: String)-> void:
 		current_state.enter()
 
 func get_cur_state_name() -> String:
-	return current_state.name
+	if current_state:
+		return current_state.name
+	return ""
